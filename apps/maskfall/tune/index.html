@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>마스크폴 난이도 · 관리</title>
+<link rel="icon" href="/apps/img/maskfall.png">
+<link rel="stylesheet" href="/apps/site.css?v=20261024">
+<style>
+  h1{font-size:20px;margin-bottom:4px}
+  h2{font-size:15px;margin-bottom:10px}
+  .card{margin-bottom:14px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input,select{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:14px}
+  input[type=password],input.code{min-width:0;flex:1 1 200px}
+  input.vc{width:96px}
+  .levels{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+  .lv{border:1px solid var(--line);background:var(--card2);color:var(--txt);border-radius:12px;padding:8px 4px;cursor:pointer;text-align:center;line-height:1.25}
+  .lv b{display:block;font-size:18px}
+  .lv span{display:block;font-size:10.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lv[aria-pressed=true]{border-color:var(--c);box-shadow:0 0 0 2px var(--c) inset}
+  .lv[aria-pressed=true] b{color:var(--c)}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:center}
+  th{color:var(--sub);font-weight:600}
+  td.l{text-align:left}
+  .x{background:none;border:1px solid var(--line);color:var(--sub);border-radius:8px;padding:6px 10px;cursor:pointer}
+  .msg{font-size:13px;min-height:1.5em}
+  .msg.err{color:var(--red)} .msg.ok{color:var(--good)}
+  .hist{font-size:12.5px;color:var(--sub);line-height:1.7}
+  @media (max-width:520px){.levels{grid-template-columns:repeat(5,1fr)}.lv b{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>마스크폴 난이도</h1>
+  <p class="note" style="margin-bottom:14px">앱은 출격할 때마다 여기서 고른 단계를 받아 씁니다(못 받으면 마지막에 받은 단계). 5단계 = 앱에 들어 있는 그대로.</p>
+
+  <form class="card" id="login">
+    <h2>관리자 암호</h2>
+    <div class="row"><input type="password" id="secret" autocomplete="current-password" placeholder="ADMIN_SECRET"><button class="btn" type="submit">열기</button></div>
+    <p class="msg" id="loginMsg"></p>
+  </form>
+
+  <div id="main" class="hidden">
+    <div class="card">
+      <h2>기본 단계 <span class="note">— 아래 버전·시험 코드에 해당하지 않는 모든 앱</span></h2>
+      <div class="levels" id="defaultLevels"></div>
+    </div>
+
+    <div class="card">
+      <h2>버전별 단계 <span class="note">— 그 versionCode 앱만</span></h2>
+      <div id="versions"></div>
+      <div class="row" style="margin-top:8px"><button class="x" type="button" id="addVersion">+ 버전 추가</button></div>
+    </div>
+
+    <div class="card">
+      <h2>시험 코드 <span class="note">— 앱 첫 화면 'PILOT' 글자를 5번 누르고 이 코드를 넣은 폰만</span></h2>
+      <div class="row"><input class="code" id="testCode" placeholder="비우면 꺼짐 (영문·숫자 4~32자)"><button class="x" type="button" id="newCode">새 코드</button><select id="testLevel"></select></div>
+    </div>
+
+    <div class="row" style="margin-bottom:6px"><button class="btn" type="button" id="save">저장</button><button class="x" type="button" id="lock">잠그기</button></div>
+    <p class="msg" id="saveMsg"></p>
+
+    <div class="card">
+      <h2>단계별 배율 <span class="note">— 앱(src/qf-tune.js)과 같은 식. 바꾸려면 앱 배포가 필요</span></h2>
+      <table><thead><tr><th>단계</th><th class="l">이름</th><th>적 탄 피해</th><th>적 체력</th><th>사격 빈도</th><th>탄속</th><th>기체 체력</th></tr></thead><tbody id="table"></tbody></table>
+      <p class="note" style="margin-top:8px">적 체력은 일반 적·중간보스·보스 모두. 시뮬레이션(사람처럼 0.4초 늦게 반응하는 봇): 1단계는 보스에서 잃는 체력이 5단계의 약 0.2~0.6배, 10단계는 약 2.5~3배.</p>
+    </div>
+
+    <div class="card">
+      <h2>바꾼 기록</h2>
+      <div class="hist" id="history"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  'use strict';
+  const API=(localStorage.getItem('pingpong_api')||'https://api.donjiral.net')+'/api/maskfall/admin/tune';
+  // src/qf-tune.js 와 같은 값: TUNE_BASE, TUNE_STEP
+  const BASE=5,STEP={dmg:1.1,hp:1.08,fire:1.03,bsp:1.02,php:1.06};
+  const NAMES=['이지','이지','노멀','노멀','하드','하드','울트라 하드','울트라 하드','익스트림','익스트림'];
+  const COLORS=['#4ade80','#4ade80','#60a5fa','#60a5fa','#facc15','#facc15','#fb923c','#fb923c','#ff6b6b','#ff6b6b'];
+  const mul=l=>{const s=l-BASE;return{dmg:STEP.dmg**s,hp:STEP.hp**s,fire:STEP.fire**s,bsp:STEP.bsp**s,php:s<0?STEP.php**-s:1};};
+  const $=id=>document.getElementById(id);
+  let secret=sessionStorage.getItem('qfTuneSecret')||'',state=null;
+
+  const fmt=v=>'×'+v.toFixed(2);
+  $('table').innerHTML=Array.from({length:10},(_,i)=>{const l=i+1,m=mul(l);return `<tr><td><b style="color:${COLORS[i]}">${l}</b></td><td class="l">${NAMES[i]}${l===BASE?' · 지금(앱 그대로)':''}</td><td>${fmt(m.dmg)}</td><td>${fmt(m.hp)}</td><td>${fmt(m.fire)}</td><td>${fmt(m.bsp)}</td><td>${fmt(m.php)}</td></tr>`;}).join('');
+  const levelOptions=sel=>Array.from({length:10},(_,i)=>`<option value="${i+1}"${i+1===sel?' selected':''}>${i+1} · ${NAMES[i]}</option>`).join('');
+
+  async function call(method,body){
+    const r=await fetch(API,{method,headers:{'X-Admin-Secret':secret,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok)throw new Error(r.status===401?'암호가 맞지 않습니다':r.status===429?'너무 많이 틀렸습니다. 1시간 뒤 다시':j.message||j.error||('오류 '+r.status));
+    return j;
+  }
+  function render(){
+    const s=state.settings;
+    $('defaultLevels').innerHTML=Array.from({length:10},(_,i)=>`<button type="button" class="lv" style="--c:${COLORS[i]}" data-l="${i+1}" aria-pressed="${s.defaultLevel===i+1}"><b>${i+1}</b><span>${NAMES[i].replace('울트라 하드','울트라')}</span></button>`).join('');
+    $('versions').innerHTML=Object.entries(s.versions).map(([vc,l])=>`<div class="row" style="margin-bottom:6px"><input class="vc" inputmode="numeric" value="${vc}" placeholder="134"><select>${levelOptions(l)}</select><button class="x" type="button" data-del>삭제</button></div>`).join('')||'<p class="note">없음</p>';
+    $('testCode').value=s.testCode;$('testLevel').innerHTML=levelOptions(s.testLevel);
+    $('history').innerHTML=(state.history||[]).map(h=>{const t=new Date(h.at).toLocaleString('ko-KR'),v=Object.entries(h.settings.versions).map(([k,l])=>`v${k}→${l}`).join(', ');
+      return `${t} · 기본 ${h.settings.defaultLevel}${v?' · '+v:''}${h.settings.testCode?' · 시험 '+h.settings.testLevel:''}`;}).join('<br>')||'없음';
+  }
+  function collect(){
+    const versions={};
+    for(const row of $('versions').querySelectorAll('.row')){const vc=row.querySelector('input').value.trim();if(vc)versions[vc]=+row.querySelector('select').value;}
+    return{defaultLevel:state.settings.defaultLevel,versions,testCode:$('testCode').value.trim(),testLevel:+$('testLevel').value};
+  }
+  async function open(){
+    try{state=await call('GET');sessionStorage.setItem('qfTuneSecret',secret);$('login').classList.add('hidden');$('main').classList.remove('hidden');render();}
+    catch(e){$('loginMsg').textContent=e.message;$('loginMsg').className='msg err';sessionStorage.removeItem('qfTuneSecret');}
+  }
+  $('login').addEventListener('submit',e=>{e.preventDefault();secret=$('secret').value;open();});
+  $('defaultLevels').addEventListener('click',e=>{const b=e.target.closest('.lv');if(!b)return;state.settings={...collect(),defaultLevel:+b.dataset.l};render();});
+  $('versions').addEventListener('click',e=>{if(!e.target.hasAttribute('data-del'))return;e.target.closest('.row').remove();});
+  $('addVersion').addEventListener('click',()=>{const box=$('versions');if(!box.querySelector('.row'))box.innerHTML='';
+    box.insertAdjacentHTML('beforeend',`<div class="row" style="margin-bottom:6px"><input class="vc" inputmode="numeric" placeholder="135"><select>${levelOptions(BASE)}</select><button class="x" type="button" data-del>삭제</button></div>`);box.querySelector('.row:last-child input').focus();});
+  $('newCode').addEventListener('click',()=>{const a=new Uint8Array(6);crypto.getRandomValues(a);$('testCode').value='qf'+Array.from(a,b=>b.toString(36).padStart(2,'0')).join('').slice(0,10);});
+  $('save').addEventListener('click',async()=>{const m=$('saveMsg');m.textContent='저장 중…';m.className='msg';
+    try{state=await call('PUT',collect());render();m.textContent='저장했습니다 · 다음 출격부터 적용';m.className='msg ok';}catch(e){m.textContent=e.message;m.className='msg err';}});
+  $('lock').addEventListener('click',()=>{sessionStorage.removeItem('qfTuneSecret');location.reload();});
+  if(secret)open();
+})();
+</script>
+</body>
+</html>
