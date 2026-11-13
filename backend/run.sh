@@ -27,6 +27,7 @@ docker run -d --name "$NAME" --restart unless-stopped \
   -p 8080:8080 \
   -v "$DATA_DIR:/app/data" \
   -e ADMIN_SECRET="${ADMIN_SECRET:-}" \
+  -e MASKFALL_APP_KEY="${MASKFALL_APP_KEY:-}" \
   "$IMAGE"
 
 echo ""
