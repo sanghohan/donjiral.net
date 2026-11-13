@@ -136,13 +136,21 @@ class MaskfallTuneService(
 class MaskfallTuneController(
     private val service: MaskfallTuneService,
     private val ipOf: RateLimitFilter,
-    @Value("\${app.admin.secret:}") private val adminSecret: String
+    @Value("\${app.admin.secret:}") private val adminSecret: String,
+    @Value("\${app.maskfall.app-key:}") private val appKey: String
 ) {
     // IP당 1시간에 암호 10번 틀리면 그 시간 동안 막는다 (분당 120회 전체 제한과 별개)
     private val failures = ConcurrentHashMap<String, LongArray>()
 
+    // 앱 키(MASKFALL_APP_KEY)를 정해 두면 X-QF-Key 헤더가 같은 요청만 답한다. 비어 있으면 누구나.
+    // 키는 앱 안에 들어 있어 뜯어 보면 나온다 — 지나가는 호출을 막는 정도이고, 답에는 비밀이 없다.
     @GetMapping("/tune")
-    fun tune(@RequestParam(required = false) vc: Int?, @RequestParam(required = false) t: String?) = service.resolve(vc, t)
+    fun tune(@RequestParam(required = false) vc: Int?, @RequestParam(required = false) t: String?,
+             @RequestHeader("X-QF-Key", required = false) key: String?): Map<String, Any> {
+        if (appKey.isNotBlank() && (key == null || !MessageDigest.isEqual(key.toByteArray(), appKey.toByteArray())))
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "forbidden")
+        return service.resolve(vc, t)
+    }
 
     @GetMapping("/admin/tune")
     fun get(@RequestHeader("X-Admin-Secret", required = false) key: String?, req: HttpServletRequest): Map<String, Any> {

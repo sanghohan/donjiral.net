@@ -48,6 +48,8 @@ app:
   admin:
     secret: ${ADMIN_SECRET:}              # 관리자 암호(예약 이름 사용). 비우면 예약 이름 아무도 못 씀
     reserved-authors: 돈지랄               # 쉼표로 여러 개 가능. 예: 돈지랄,관리자
+  maskfall:
+    app-key: ${MASKFALL_APP_KEY:}         # 마스크폴 앱 키(X-QF-Key). 비우면 /api/maskfall/tune 을 누구나 부를 수 있음
   s3:
     # 비밀 아님 → 소스에 직접. (인증은 EC2 IAM Role)
     #
