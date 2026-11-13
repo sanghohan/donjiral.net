@@ -109,7 +109,8 @@ class RateLimitFilter(
      * 직접 연결한 상대(remoteAddr)가 신뢰할 수 있는 프록시일 때만 XFF 를 봅니다.
      * XFF 는 "위조값1, 위조값2, 진짜값" 형태가 되므로 맨 오른쪽을 씁니다.
      */
-    private fun clientIp(req: HttpServletRequest): String {
+    // 관리자 암호 실패 횟수(마스크폴 난이도)도 같은 실제 IP 로 센다
+    fun clientIp(req: HttpServletRequest): String {
         val remote = req.remoteAddr ?: "unknown"
         if (!isTrustedProxy(remote)) return remote
         val xff = req.getHeader("X-Forwarded-For")

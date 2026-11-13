@@ -10,6 +10,7 @@ index.html            # 홈 — 앱 목록 (참교육 · Now Playing CD · 마�
 apps/chamedu/         # 🛡️ 참교육 소개 + 게시판 (board=chamedu)
 apps/nowplayingcd/    # 💿 Now Playing CD 소개 + 게시판 (board=nowplayingcd)
 apps/maskfall/        # 🛸 마스크폴 MASKFALL 소개 + 게시판 (board=maskfall)
+apps/maskfall/tune/   # 마스크폴 난이도 단계 관리(관리자 암호, noindex) — docs/마스크폴-난이도-설정.md
 apps/board.js         # 앱별 게시판 공용 코드 — 페이지의 <body data-board="앱"> 로 게시판을 고른다
 apps/site.css, site.js, img/  # 공용 스타일 · 방문 수 · 앱 아이콘
 nowplayingcd/index.html  # Now Playing CD 영어 소개·설명서 (앱 영어 화면의 About 링크)
