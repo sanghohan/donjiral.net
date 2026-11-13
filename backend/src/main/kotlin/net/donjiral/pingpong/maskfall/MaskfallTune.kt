@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
  * 고르는 순서: 시험 코드가 맞으면 시험 단계 → 그 버전에 정한 단계 → 기본 단계.
  * 단계별 실제 배율은 앱(src/qf-tune.js)에 들어 있고, 여기서는 숫자 하나만 고른다.
  * 보스 체력 %(30~200, 100 = 앱 그대로)도 같은 답에 실어 보낸다 — 마지막 보스 체력에만 곱한다. 시험 코드가 맞으면 시험용 %.
+ * 난이도·보스별 %(bossHpBy, [일반·정예·악몽] × MF-01~MF-10)는 전체 % 위에 한 번 더 곱해진다.
  * 바꾸기(관리자 페이지 donjiral.net/apps/maskfall/tune/)는 X-Admin-Secret 헤더 = app.admin.secret 일 때만.
  */
 @Entity
@@ -35,6 +36,7 @@ class MaskfallTune(
     // 나중에 더한 열: 이미 있는 행에는 null 로 들어오므로 nullable (null = 100)
     var bossHp: Int? = 100,
     var testBossHp: Int? = 100,
+    @Column(length = 400) var bossHpBy: String? = null,   // [[일반 MF-01~10],[정예],[악몽]]
     var updatedAt: Instant = Instant.now()
 )
 
@@ -56,6 +58,7 @@ data class TuneSettings(
     val testLevel: Int = 5,
     val bossHp: Int = 100,
     val testBossHp: Int = 100,
+    val bossHpBy: List<List<Int>> = List(3) { List(10) { 100 } },
     val updatedAt: String? = null
 )
 
@@ -70,6 +73,10 @@ class MaskfallTuneService(
     private val levels = 1..10
     private val bossHpRange = 30..200
     private val versionsType = object : TypeReference<Map<String, Int>>() {}
+    private val tableType = object : TypeReference<List<List<Int>>>() {}
+    private fun bossHpByOf(t: MaskfallTune): List<List<Int>> =
+        runCatching { mapper.readValue(t.bossHpBy ?: "", tableType) }.getOrNull()
+            ?.takeIf { it.size == 3 && it.all { row -> row.size == 10 } } ?: List(3) { List(10) { 100 } }
 
     private fun row(): MaskfallTune = repo.findById(1).orElseGet { MaskfallTune() }
     private fun versionsOf(t: MaskfallTune): Map<String, Int> =
@@ -82,15 +89,15 @@ class MaskfallTuneService(
             MessageDigest.isEqual(code.trim().toByteArray(), t.testCode.toByteArray())
         val byVersion = vc?.let { versionsOf(t)[it.toString()] }
         return when {
-            test -> mapOf("level" to t.testLevel, "source" to "test", "bossHp" to (t.testBossHp ?: 100))
-            byVersion != null -> mapOf("level" to byVersion, "source" to "version", "bossHp" to (t.bossHp ?: 100))
-            else -> mapOf("level" to t.defaultLevel, "source" to "default", "bossHp" to (t.bossHp ?: 100))
+            test -> mapOf("level" to t.testLevel, "source" to "test", "bossHp" to (t.testBossHp ?: 100), "bossHpBy" to bossHpByOf(t))
+            byVersion != null -> mapOf("level" to byVersion, "source" to "version", "bossHp" to (t.bossHp ?: 100), "bossHpBy" to bossHpByOf(t))
+            else -> mapOf("level" to t.defaultLevel, "source" to "default", "bossHp" to (t.bossHp ?: 100), "bossHpBy" to bossHpByOf(t))
         }
     }
 
     @Transactional(readOnly = true)
     fun settings(): TuneSettings = row().let {
-        TuneSettings(it.defaultLevel, versionsOf(it), it.testCode, it.testLevel, it.bossHp ?: 100, it.testBossHp ?: 100, it.updatedAt.toString())
+        TuneSettings(it.defaultLevel, versionsOf(it), it.testCode, it.testLevel, it.bossHp ?: 100, it.testBossHp ?: 100, bossHpByOf(it), it.updatedAt.toString())
     }
 
     @Transactional(readOnly = true)
@@ -103,6 +110,7 @@ class MaskfallTuneService(
         fun bad(msg: String): Nothing = throw ResponseStatusException(HttpStatus.BAD_REQUEST, msg)
         if (req.defaultLevel !in levels || req.testLevel !in levels) bad("단계는 1~10")
         if (req.bossHp !in bossHpRange || req.testBossHp !in bossHpRange) bad("보스 체력은 30~200%")
+        if (req.bossHpBy.size != 3 || req.bossHpBy.any { row -> row.size != 10 || row.any { it !in bossHpRange } }) bad("보스별 체력은 난이도 3 × 보스 10, 각 30~200%")
         if (req.versions.size > 50) bad("버전은 50개까지")
         req.versions.forEach { (k, v) -> if (!k.matches(Regex("\\d{1,6}")) || v !in levels) bad("버전 $k: 버전 번호(숫자)와 단계 1~10") }
         val code = req.testCode.trim()
@@ -114,6 +122,7 @@ class MaskfallTuneService(
         t.testLevel = req.testLevel
         t.bossHp = req.bossHp
         t.testBossHp = req.testBossHp
+        t.bossHpBy = mapper.writeValueAsString(req.bossHpBy)
         t.updatedAt = Instant.now()
         repo.save(t)
         val saved = settings()
