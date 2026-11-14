@@ -28,14 +28,14 @@
   .x{background:none;border:1px solid var(--line);color:var(--sub);border-radius:8px;padding:6px 10px;cursor:pointer}
   .bossby td{vertical-align:top;padding:6px 3px}
   .bossby td.l b{display:block}.bossby td.l span{font-size:10.5px;color:var(--sub)}
-  .bossby input{width:64px;box-sizing:border-box;text-align:center;padding:6px 2px}
+  .bossby input{width:92px;box-sizing:border-box;text-align:center;padding:6px 2px}
   .bossby input.chg{border-color:#facc15;color:#facc15}
   .bossby small{display:block;font-size:10.5px;color:var(--sub);line-height:1.35;margin-top:2px;white-space:nowrap}
   .bossby small.warn{color:var(--red)}
   .msg{font-size:13px;min-height:1.5em}
   .msg.err{color:var(--red)} .msg.ok{color:var(--good)}
   .hist{font-size:12.5px;color:var(--sub);line-height:1.7}
-  @media (max-width:520px){.bossby input{width:52px}.levels{grid-template-columns:repeat(5,1fr)}.lv b{font-size:16px}}
+  @media (max-width:520px){.bossby input{width:84px;font-size:13px}.levels{grid-template-columns:repeat(5,1fr)}.lv b{font-size:16px}}
 </style>
 </head>
 <body>
@@ -59,10 +59,10 @@
       <h2>보스 체력 <span class="note">— 마지막 보스만. 100% = 앱 그대로. 단계의 적 체력 배율과 곱해진다 (v135 이상 앱)</span></h2>
       <div class="row"><input type="range" id="bossHp" min="30" max="200" step="5" style="flex:1 1 200px"><b id="bossHpOut" style="min-width:4.5em;text-align:right"></b><button class="x" type="button" id="bossHpReset">100%</button></div>
       <p class="note" id="bossHpNote" style="margin-top:6px"></p>
-      <h2 style="margin-top:14px">보스·난이도별 <span class="note">— 위 전체 %에 한 번 더 곱해진다. 시험 코드 폰에도 똑같이 적용</span></h2>
+      <h2 style="margin-top:14px">보스·난이도별 <span class="note">— 보스 체력 숫자를 직접 넣는다(기준 레벨·5단계에서의 값). 시험 코드 폰에도 똑같이 적용</span></h2>
       <table class="bossby"><thead><tr><th class="l">보스</th><th>일반</th><th>정예</th><th>악몽</th></tr></thead><tbody id="bossBy"></tbody></table>
-      <p class="note" style="margin-top:8px">칸: % · 그때의 보스 체력 · 한 발도 안 빗나갈 때 격파 시간(주포 파워 1 / MAX, 팔콘·기준 레벨·5단계). 실제 보스전은 피하느라 그 1.7~2.5배, 제한 300초.</p>
-      <div class="row" style="margin-top:8px"><button class="x" type="button" id="bossByReset">표 모두 100%</button></div>
+      <p class="note" style="margin-top:8px">칸: 보스 체력 · 앱 기본값 대비 % · 한 발도 안 빗나갈 때 격파 시간(주포 파워 1 / MAX, 팔콘·기준 레벨). 기본값의 30~200% 안에서만 저장된다. 실제 보스전은 피하느라 그 1.7~2.5배, 제한 300초. 위 전체 %를 움직이면 표의 숫자도 같이 바뀐다.</p>
+      <div class="row" style="margin-top:8px"><button class="x" type="button" id="bossByReset">표 모두 앱 기본값</button></div>
     </div>
 
     <div class="card">
@@ -113,8 +113,14 @@
   const BOSS_P1=[[49,56,67,67,55,57,62,61,120,70],[53,54,58,38,70,69,93,103,184,123],[44,57,64,40,77,73,94,105,196,121]];
   const BOSS_MAX=[[15,17,22,23,19,20,24,21,41,25],[19,21,22,13,24,25,32,37,65,43],[16,22,23,14,26,25,35,37,67,44]];
   const hpText=v=>v>=10000?(v/10000).toFixed(v>=1e6?0:1)+'만':Math.round(v).toLocaleString('ko-KR');
-  const markBy=()=>{const g=+$('bossHp').value/100;for(const i of $('bossBy').querySelectorAll('input')){const t=+i.dataset.t,b=+i.dataset.b,v=+i.value,k=g*(v>=30&&v<=200?v:100)/100,p1=BOSS_P1[t][b]*k;
-    i.classList.toggle('chg',v!==100);const s=i.parentNode.querySelector('small');s.textContent=`${hpText(BOSS_HP[t][b]*k)} · ${Math.round(p1)}초 / ${Math.round(BOSS_MAX[t][b]*k)}초`;s.classList.toggle('warn',p1>=150);}};
+  // 칸의 값은 체력 숫자, 보내는 값은 앱 기본값 대비 %(소수 다섯째 자리까지 — 넣은 숫자가 그대로 돌아오게). data-pct 가 진짜 값이고, 전체 %가 바뀌면 숫자를 다시 쓴다
+  const pctOf=i=>{const g=+$('bossHp').value/100,base=BOSS_HP[+i.dataset.t][+i.dataset.b]*g,v=+i.value;return v>0?Math.round(v/base*1e7)/1e5:NaN;};
+  // data-pct 가 진짜 값('' = 범위 밖). 사람이 칸을 고칠 때만 숫자 → % 로 다시 계산하고, 전체 %가 바뀌면 % 는 두고 숫자만 다시 쓴다
+  const showCell=i=>{const t=+i.dataset.t,b=+i.dataset.b,p=+i.dataset.pct,ok=i.dataset.pct!=='',k=(+$('bossHp').value/100)*(ok?p:100)/100,p1=BOSS_P1[t][b]*k;
+    i.classList.toggle('chg',ok&&p!==100);const s=i.parentNode.querySelector('small');
+    s.textContent=ok?`${+p.toFixed(1)}% · ${Math.round(p1)}초 / ${Math.round(BOSS_MAX[t][b]*k)}초`:`기본값의 30~200% (${hpText(BOSS_HP[t][b]*.3)}~${hpText(BOSS_HP[t][b]*2)})`;s.classList.toggle('warn',!ok||p1>=150);};
+  const typedCell=i=>{const p=pctOf(i);i.dataset.pct=p>=30&&p<=200?p:'';showCell(i);};
+  const fillBy=()=>{const g=+$('bossHp').value/100;for(const i of $('bossBy').querySelectorAll('input')){if(i.dataset.pct!=='')i.value=Math.round(BOSS_HP[+i.dataset.t][+i.dataset.b]*g*(+i.dataset.pct)/100);showCell(i);}};
   const levelOptions=sel=>Array.from({length:10},(_,i)=>`<option value="${i+1}"${i+1===sel?' selected':''}>${i+1} · ${NAMES[i]}</option>`).join('');
 
   async function call(method,body){
@@ -130,15 +136,15 @@
     $('testCode').value=s.testCode;$('testLevel').innerHTML=levelOptions(s.testLevel);
     $('bossHp').value=s.bossHp??100;showBossHp();
     const by=Array.isArray(s.bossHpBy)&&s.bossHpBy.length===3?s.bossHpBy:[0,1,2].map(()=>Array(10).fill(100));
-    $('bossBy').innerHTML=BOSSES.map((n,b)=>`<tr><td class="l"><b>MF-${String(b+1).padStart(2,'0')}</b><span>${n}</span></td>${[0,1,2].map(t=>`<td><input type="number" inputmode="numeric" min="30" max="200" step="5" value="${by[t][b]}" data-t="${t}" data-b="${b}"><small></small></td>`).join('')}</tr>`).join('');markBy();$('testBossHp').innerHTML=bossHpOptions(s.testBossHp??100);
+    $('bossBy').innerHTML=BOSSES.map((n,b)=>`<tr><td class="l"><b>MF-${String(b+1).padStart(2,'0')}</b><span>${n}</span></td>${[0,1,2].map(t=>`<td><input type="number" inputmode="numeric" min="1" step="1" data-pct="${by[t][b]}" data-t="${t}" data-b="${b}"><small></small></td>`).join('')}</tr>`).join('');fillBy();$('testBossHp').innerHTML=bossHpOptions(s.testBossHp??100);
     $('history').innerHTML=(state.history||[]).map(h=>{const t=new Date(h.at).toLocaleString('ko-KR'),v=Object.entries(h.settings.versions).map(([k,l])=>`v${k}→${l}`).join(', ');
-      const bh=h.settings.bossHp??100,tb=h.settings.testBossHp??100,by=(h.settings.bossHpBy||[]).flatMap((row,t)=>Array.isArray(row)?row.map((x,i)=>x!==100?`${['일반','정예','악몽'][t]} MF-${String(i+1).padStart(2,'0')} ${x}%`:''):[]).filter(Boolean).join(', ');
+      const bh=h.settings.bossHp??100,tb=h.settings.testBossHp??100,by=(h.settings.bossHpBy||[]).flatMap((row,t)=>Array.isArray(row)?row.map((x,i)=>x!==100?`${['일반','정예','악몽'][t]} MF-${String(i+1).padStart(2,'0')} ${hpText(BOSS_HP[t][i]*x/100)}(${+(+x).toFixed(1)}%)`:''):[]).filter(Boolean).join(', ');
       return `${t} · 기본 ${h.settings.defaultLevel}${bh!==100?' · 보스 체력 '+bh+'%':''}${by?' · '+by:''}${v?' · '+v:''}${h.settings.testCode?' · 시험 '+h.settings.testLevel+(tb!==100?' (보스 '+tb+'%)':''):''}`;}).join('<br>')||'없음';
   }
   function collect(){
     const versions={};
     for(const row of $('versions').querySelectorAll('.row')){const vc=row.querySelector('input').value.trim();if(vc)versions[vc]=+row.querySelector('select').value;}
-    return{defaultLevel:state.settings.defaultLevel,versions,testCode:$('testCode').value.trim(),testLevel:+$('testLevel').value,bossHp:+$('bossHp').value,testBossHp:+$('testBossHp').value,bossHpBy:[0,1,2].map(t=>Array.from($('bossBy').querySelectorAll(`input[data-t="${t}"]`),i=>Math.round(+i.value)||0))};
+    return{defaultLevel:state.settings.defaultLevel,versions,testCode:$('testCode').value.trim(),testLevel:+$('testLevel').value,bossHp:+$('bossHp').value,testBossHp:+$('testBossHp').value,bossHpBy:[0,1,2].map(t=>Array.from($('bossBy').querySelectorAll(`input[data-t="${t}"]`),i=>+i.dataset.pct||0))};
   }
   async function open(){
     try{state=await call('GET');sessionStorage.setItem('qfTuneSecret',secret);$('login').classList.add('hidden');$('main').classList.remove('hidden');render();}
@@ -146,15 +152,16 @@
   }
   $('login').addEventListener('submit',e=>{e.preventDefault();secret=$('secret').value;open();});
   $('defaultLevels').addEventListener('click',e=>{const b=e.target.closest('.lv');if(!b)return;state.settings={...collect(),defaultLevel:+b.dataset.l};render();});
-  $('bossHp').addEventListener('input',()=>{showBossHp();markBy();});
-  $('bossBy').addEventListener('input',markBy);
-  $('bossByReset').addEventListener('click',()=>{for(const i of $('bossBy').querySelectorAll('input'))i.value=100;markBy();});
-  $('bossHpReset').addEventListener('click',()=>{$('bossHp').value=100;showBossHp();markBy();});
+  $('bossHp').addEventListener('input',()=>{showBossHp();fillBy();});
+  $('bossBy').addEventListener('input',e=>{if(e.target.matches('input'))typedCell(e.target);});
+  $('bossByReset').addEventListener('click',()=>{for(const i of $('bossBy').querySelectorAll('input'))i.dataset.pct=100;fillBy();});
+  $('bossHpReset').addEventListener('click',()=>{$('bossHp').value=100;showBossHp();fillBy();});
   $('versions').addEventListener('click',e=>{if(!e.target.hasAttribute('data-del'))return;e.target.closest('.row').remove();});
   $('addVersion').addEventListener('click',()=>{const box=$('versions');if(!box.querySelector('.row'))box.innerHTML='';
     box.insertAdjacentHTML('beforeend',`<div class="row" style="margin-bottom:6px"><input class="vc" inputmode="numeric" placeholder="135"><select>${levelOptions(BASE)}</select><button class="x" type="button" data-del>삭제</button></div>`);box.querySelector('.row:last-child input').focus();});
   $('newCode').addEventListener('click',()=>{const a=new Uint8Array(6);crypto.getRandomValues(a);$('testCode').value='qf'+Array.from(a,b=>b.toString(36).padStart(2,'0')).join('').slice(0,10);});
   $('save').addEventListener('click',async()=>{const m=$('saveMsg');m.textContent='저장 중…';m.className='msg';
+    if($('bossBy').querySelector('input[data-pct=""]')){m.textContent='보스 체력이 범위 밖인 칸이 있습니다 (빨간 안내 참고)';m.className='msg err';return;}
     try{state=await call('PUT',collect());render();m.textContent='저장했습니다 · 다음 출격부터 적용';m.className='msg ok';}catch(e){m.textContent=e.message;m.className='msg err';}});
   $('lock').addEventListener('click',()=>{sessionStorage.removeItem('qfTuneSecret');location.reload();});
   if(secret)open();
