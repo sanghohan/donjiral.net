@@ -6,7 +6,8 @@
 
 ## 페이지 구성
 ```
-index.html            # 홈 — 앱 목록 (참교육 · Now Playing CD · 마스크폴)
+index.html            # 홈 — 게임 아이디어 배너 + 앱 목록 (참교육 · Now Playing CD · 마스크폴)
+ideas/                # 💡 게임 아이디어 게시판 (board=ideas, 분류는 페이지의 window.BOARD_CATS)
 apps/chamedu/         # 🛡️ 참교육 소개 + 게시판 (board=chamedu)
 apps/nowplayingcd/    # 💿 Now Playing CD 소개 + 게시판 (board=nowplayingcd)
 apps/maskfall/        # 🛸 마스크폴 MASKFALL 소개 + 게시판 (board=maskfall)

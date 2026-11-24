@@ -9,7 +9,7 @@ let API_BASE = "https://api.donjiral.net";
 API_BASE = localStorage.getItem('pingpong_api') || API_BASE;
 const USE_API = !!API_BASE;
 
-const CATS=[
+const CATS=window.BOARD_CATS||[   // 페이지가 window.BOARD_CATS 로 분류를 바꿀 수 있다 (예: /ideas/)
   {k:'notice', n:'공지사항', e:'📢'},
   {k:'qna', n:'질문답변', e:'💬'},
   {k:'free', n:'자유게시판', e:'☕'}

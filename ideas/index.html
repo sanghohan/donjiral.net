@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>게임 아이디어 게시판 · donjiral</title>
+<meta name="description" content="하고 싶은 게임을 적고, 서로 댓글로 의견을 나눠요. 좋아요와 의견이 모인 아이디어는 돈지랄이 실제로 만들어요.">
+<link rel="canonical" href="https://www.donjiral.net/ideas/">
+<meta property="og:title" content="게임 아이디어 게시판 · donjiral">
+<meta property="og:description" content="이런 게임 있으면 좋겠다 — 적어 주시면 같이 다듬고, 좋은 아이디어는 만들어요.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.donjiral.net/ideas/">
+<meta name="robots" content="index,follow">
+<link rel="icon" href="/apps/img/ideas.svg">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="/apps/site.css?v=20261024">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.5/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>window.BOARD_CATS=[{k:'idea',n:'게임 아이디어',e:'💡'},{k:'notice',n:'공지사항',e:'📢'}];</script>
+</head>
+<body data-board="ideas">
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="/">donjiral<span>돈지랄의 앱</span></a>
+    <nav class="nav">
+      <a href="/apps/chamedu/"><img src="/apps/img/chamedu.png" alt="">참교육</a>
+      <a href="/apps/nowplayingcd/"><img src="/apps/img/nowplayingcd.png" alt="">Now Playing CD</a>
+      <a href="/apps/maskfall/"><img src="/apps/img/maskfall.png" alt="">MASKFALL</a>
+      <a href="/ideas/" aria-current="page"><img src="/apps/img/ideas.svg" alt="">게임 아이디어</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <img src="/apps/img/ideas.svg" alt="">
+    <div>
+      <h1>게임 아이디어 게시판</h1>
+      <p class="tag">이런 게임 있으면 좋겠다 — 적어 주시면 같이 다듬고, 좋은 아이디어는 만들어요</p>
+      <div class="chips"><span class="chip">누구나 글쓰기</span><span class="chip">댓글로 피드백</span><span class="chip hi">좋은 아이디어는 개발</span></div>
+    </div>
+  </section>
+
+  <section class="card intro">
+    <h2>이렇게 해요</h2>
+    <ol>
+      <li><b>💡 게임 아이디어</b>로 하고 싶은 게임을 올려요. 짧게 써도 괜찮아요</li>
+      <li>다른 사람 아이디어에 <b>댓글</b>로 의견을 달고, 해 보고 싶으면 <b>❤ 좋아요</b>를 눌러요</li>
+      <li>좋아요와 의견이 모인 아이디어 중에서 골라 <b>돈지랄이 실제로 개발</b>해요. 개발을 시작하면 📢 공지사항과 그 글의 댓글로 알려 드려요</li>
+    </ol>
+
+    <h2>이런 걸 적어 주면 좋아요</h2>
+    <ul>
+      <li><b>한 줄 소개</b> — 어떤 게임인지 한 문장으로</li>
+      <li><b>핵심 재미</b> — 무엇이 재밌는지, 한 판이 어떻게 흘러가는지</li>
+      <li><b>비슷한 게임</b> — 있다면, 그것과 무엇이 다른지</li>
+      <li><b>어디서</b> — 폰 · PC · 웹 중 어디서 하고 싶은지</li>
+    </ul>
+
+    <p class="warn">올린 아이디어는 누구나 볼 수 있고, 게임을 만들 때 참고하거나 그대로 쓸 수 있어요. 공개하고 싶지 않은 아이디어는 올리지 말아 주세요.</p>
+  </section>
+
+  <h2 class="sec">💬 아이디어 게시판</h2>
+  <div id="board"></div>
+
+  <footer><a href="/privacy/">사이트 개인정보처리방침</a> · <span>© donjiral.net</span></footer>
+  <div id="visitCounter">·</div>
+</div>
+<script src="/apps/board.js"></script>
+<script src="/apps/site.js"></script>
+</body>
+</html>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google-site-verification" content="LQIbKYNzA9hVeCbW75pSOdapQIeA_JDhXgvdms-08dw">
 <title>돈지랄의 앱 · donjiral</title>
-<meta name="description" content="돈지랄이 만든 안드로이드 앱 — 참교육(자녀 스마트폰 관리), Now Playing CD(CD 플레이어 음악 화면), 마스크폴 MASKFALL(슈팅 게임) 소개와 앱별 게시판.">
+<meta name="description" content="돈지랄이 만든 안드로이드 앱 — 참교육(자녀 스마트폰 관리), Now Playing CD(CD 플레이어 음악 화면), 마스크폴 MASKFALL(슈팅 게임) 소개와 앱별 게시판, 게임 아이디어 게시판.">
 <link rel="canonical" href="https://www.donjiral.net/">
 <meta property="og:title" content="돈지랄의 앱 · donjiral">
 <meta property="og:description" content="참교육 · Now Playing CD · 마스크폴 MASKFALL 소개와 앱별 게시판">
@@ -13,6 +13,16 @@
 <meta property="og:url" content="https://www.donjiral.net/">
 <meta name="robots" content="index,follow">
 <link rel="stylesheet" href="/apps/site.css?v=20261024">
+<style>
+.idea-banner{word-break:keep-all;display:flex;align-items:center;gap:14px;margin:0 0 18px;padding:16px 18px;border-radius:16px;text-decoration:none;color:var(--txt);background:linear-gradient(135deg,rgba(139,92,246,.30),rgba(34,211,238,.16));border:1px solid var(--accent);transition:.15s}
+.idea-banner:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.idea-banner img{width:56px;height:56px;border-radius:14px;flex-shrink:0}
+.idea-banner .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.idea-banner b{font-size:17px}
+.idea-banner .txt span{font-size:13.5px;color:#d7dbf5;line-height:1.55}
+.idea-banner .cta{flex-shrink:0;font-size:14px;font-weight:700;color:#fff;background:var(--accent);padding:10px 14px;border-radius:11px}
+@media(max-width:560px){.idea-banner{flex-wrap:wrap}.idea-banner .cta{width:100%;text-align:center}}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -22,6 +32,7 @@
       <a href="/apps/chamedu/"><img src="/apps/img/chamedu.png" alt="">참교육</a>
       <a href="/apps/nowplayingcd/"><img src="/apps/img/nowplayingcd.png" alt="">Now Playing CD</a>
       <a href="/apps/maskfall/"><img src="/apps/img/maskfall.png" alt="">MASKFALL</a>
+      <a href="/ideas/"><img src="/apps/img/ideas.svg" alt="">게임 아이디어</a>
     </nav>
   </header>
 
@@ -29,6 +40,15 @@
     <h1>📱 돈지랄의 앱</h1>
     <p>직접 만든 안드로이드 앱을 소개하고, 앱마다 게시판에서 묻고 답해요</p>
   </section>
+
+  <a class="idea-banner" href="/ideas/">
+    <img src="/apps/img/ideas.svg" alt="">
+    <div class="txt">
+      <b>💡 이런 게임 있으면 좋겠다?</b>
+      <span>하고 싶은 게임을 적어 주세요. 서로 댓글로 다듬고, 좋아요가 모인 아이디어는 실제로 만들어요.</span>
+    </div>
+    <span class="cta">아이디어 올리기 →</span>
+  </a>
 
   <main class="apps">
     <a class="card app" href="/apps/chamedu/">
