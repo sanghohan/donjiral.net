@@ -29,6 +29,19 @@ spring:
       # 개발 PC에서만 H2_CONSOLE=true 로 켜세요.
       enabled: ${H2_CONSOLE:false}
 
+  # 새 글 알림 메일 — Gmail 앱 비밀번호를 ~/pingpong.env 의 MAIL_PASSWORD 로. 비우면 알림 꺼짐
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+
   servlet:
     multipart:
       # 인증 전에 요청 본문을 파싱하는 단계의 상한이라 낮게 유지합니다.
@@ -48,6 +61,10 @@ app:
   admin:
     secret: ${ADMIN_SECRET:}              # 관리자 암호(예약 이름 사용). 비우면 예약 이름 아무도 못 씀
     reserved-authors: 돈지랄               # 쉼표로 여러 개 가능. 예: 돈지랄,관리자
+  notify:
+    email-to: ${NOTIFY_EMAIL_TO:}         # 알림 받을 주소(쉼표로 여러 개). 비우면 알림 꺼짐
+    max-per-hour: 30                      # 도배 대비 시간당 최대 알림 수
+    site-base-url: https://www.donjiral.net
   maskfall:
     app-key: ${MASKFALL_APP_KEY:}         # 마스크폴 앱 키(X-QF-Key). 비우면 /api/maskfall/tune 을 누구나 부를 수 있음
   s3:

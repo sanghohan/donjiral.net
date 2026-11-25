@@ -1,6 +1,8 @@
 package net.donjiral.pingpong.post
 
+import net.donjiral.pingpong.notify.BoardWriteEvent
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.PageRequest
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
@@ -12,6 +14,7 @@ import org.springframework.http.HttpStatus
 class PostService(
     private val postRepository: PostRepository,
     private val commentRepository: CommentRepository,
+    private val events: ApplicationEventPublisher,
     @Value("\${app.admin.secret:}") private val adminSecret: String,
     @Value("\${app.admin.reserved-authors:돈지랄}") reservedRaw: String
 ) {
@@ -64,7 +67,11 @@ class PostService(
             media = req.media?.trim()?.takeIf { it.isNotEmpty() },
             passwordHash = encoder.encode(req.password)
         )
-        return postRepository.save(post).toDetail()
+        val saved = postRepository.save(post)
+        events.publishEvent(
+            BoardWriteEvent(BoardWriteEvent.Kind.POST, saved.board ?: "pingpong", saved.id, saved.title, saved.author, saved.content)
+        )
+        return saved.toDetail()
     }
 
     @Transactional
@@ -101,6 +108,9 @@ class PostService(
         )
         post.comments.add(comment)
         val saved = commentRepository.save(comment)
+        events.publishEvent(
+            BoardWriteEvent(BoardWriteEvent.Kind.COMMENT, post.board ?: "pingpong", post.id, post.title, saved.author, saved.content)
+        )
         return CommentResponse(saved.id, saved.author, saved.content, saved.createdAt)
     }
 

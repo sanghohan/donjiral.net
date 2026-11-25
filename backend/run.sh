@@ -28,6 +28,9 @@ docker run -d --name "$NAME" --restart unless-stopped \
   -v "$DATA_DIR:/app/data" \
   -e ADMIN_SECRET="${ADMIN_SECRET:-}" \
   -e MASKFALL_APP_KEY="${MASKFALL_APP_KEY:-}" \
+  -e MAIL_USERNAME="${MAIL_USERNAME:-}" \
+  -e MAIL_PASSWORD="${MAIL_PASSWORD:-}" \
+  -e NOTIFY_EMAIL_TO="${NOTIFY_EMAIL_TO:-}" \
   "$IMAGE"
 
 echo ""

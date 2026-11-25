@@ -23,6 +23,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    // 새 글 알림 메일 (Gmail SMTP)
+    implementation("org.springframework.boot:spring-boot-starter-mail")
     // 비밀번호 해싱(BCrypt)만 사용 — 전체 시큐리티 필터는 켜지 않음
     implementation("org.springframework.security:spring-security-crypto")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
